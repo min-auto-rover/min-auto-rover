@@ -1,0 +1,238 @@
+#+TITLE: MAR Development Manual
+#+SETUPFILE: ../.setup
+#+OPTIONS: toc:2
+
+#+BEGIN_CENTER
+*Welcome to The Development Manual of the Minimal Autonomous Rover Project!*
+
+/This page is not intended for non-developers. See also User Guide./
+#+END_CENTER
+
+* MAR GNU/Linux
+
+** Build MAR GNU/Linux
+
+MAR GNU/Linux is built with the [[https://www.yoctoproject.org/][Yocto Project]]. There is no /quick start/ guide for building MAR GNU/Linux from scratch, since building a Linux from source code is not a /very/ easy thing as you build software using CMake and Autotools.
+
+1. *Read the [[https://docs.yoctoproject.org/index.html][documentation for Yocto]]*. You may want to checkout version 5.0.4 codename Scarthgap.
+
+2. *Prepare a Debian virtual machine*.
+
+   *Note*: You should to use a /headless/, /Debian 12/, /virtual/ machine.
+
+   It is meaningless to use GUI to compile and test a headless target machine. If you are not familiar with command line interface (e.g. bash), then you should learn Linux first.
+
+   You should use Debian 12.x. Although the Yocto documentation says they have tested on other distributions, we have found that ~bitbake~ cannot work well on Ubuntu 24.04.
+
+   You should use a virtual machine to separate the toolchain from your production environment.
+
+   Please allocate at least 200 GiB for the virtual machine to avoid re-partitioning your virtual hard disk. If you want to build SDK/eSDK, please allocate more. If you are using VMware, please use SATA for virtual disk to avoid virtual hard disk driver problems when re-partitioning. Please manually partition the disk; it is a good idea to put swap partition before your root partition so that it is easier to re-partition. Below is a reasonable partitioning plan.
+   #+BEGIN_SRC
+Device         Start       End   Sectors   Size Type
+/dev/sda1       2048   1050623   1048576   512M EFI System
+/dev/sda2  [omitted] [omitted] [omitted]     8G Linux swap
+/dev/sda3  [omitted] [omitted] [omitted]   256G Linux filesystem
+   #+END_SRC
+
+   Install Debian (without GUI) and add yourself to ~sudoers~.
+
+   You should use ~apt~ for your software package manager. Update and upgrade ~apt~ as usual.
+
+   #+BEGIN_SRC shell
+sudo apt update
+sudo apt upgrade
+   #+END_SRC
+
+   Install or update your editor as well. ~Vim~ works well, while ~emacs~ will need additional configuration for bitbake support.
+
+3. *Install Yocto*.
+
+   a) Install essential tools.
+
+      #+BEGIN_SRC shell
+sudo apt install gawk wget git diffstat unzip texinfo gcc build-essential chrpath socat cpio python3 python3-pip python3-pexpect xz-utils debianutils iputils-ping python3-git python3-jinja2 python3-subunit zstd liblz4-tool file locales libacl1
+      #+END_SRC
+
+   b) Change locale. Don't skip this step. Don't use ~en_GB~ even if you are in the UK and use the British keyboard layout.
+
+      #+BEGIN_SRC shell
+sudo locale-gen en_US.UTF-8
+      #+END_SRC
+
+   c) Clone ~poky~ -- the reference distribution.
+
+      #+BEGIN_SRC shell
+git clone git://git.yoctoproject.org/poky
+cd poky
+      #+END_SRC
+
+      We are using ~scarthgap~ branch.
+
+      #+BEGIN_SRC shell
+git checkout -t origin/scarthgap -b my-scarthgap
+git pull
+      #+END_SRC
+
+4. *Clone meta-marfb and its dependencies*.
+
+   Switch to folder ~poky~.
+
+   Clone the following and switch each of their branch to ~scarthgap~.
+   - https://github.com/agherzan/meta-raspberrypi.git
+   - https://github.com/openembedded/meta-openembedded.git
+
+   Clone https://git.soton.ac.uk/qs2g22/meta-marfb.git and switch to a version.
+
+   The ~poky~ directory should contain (some files omitted):
+   #+BEGIN_SRC
+   poky/
+      ├── bitbake
+      ├── build
+      ├── meta
+      ├── meta-marfb
+      ├── meta-openembedded
+      ├── meta-poky
+      ├── meta-raspberrypi
+      ├── meta-selftest
+      ├── meta-skeleton
+      ├── meta-yocto-bsp
+      └── oe-init-build-env
+
+       and other files.
+    #+END_SRC
+
+5. *Source the build environment*.
+
+   In folder ~poky~,
+
+   #+BEGIN_SRC shell
+. oe-init-build-env
+   #+END_SRC
+
+   (~.~ is the shorthand for ~source~, the full command is ~source oe-init-build-env~.)
+
+   It will bring you to ~poky/build~.
+
+6. *Add layers*.
+
+   We need to use the following layers. Layers usually start with ~meta-~.
+
+   #+BEGIN_SRC shell
+bitbake-layers add-layer ../meta-raspberrypi
+bitbake-layers add-layer ../meta-marfb
+bitbake-layers add-layer ../meta-openembedded/meta-oe
+bitbake-layers add-layer ../meta-openembedded/meta-python
+bitbake-layers add-layer ../meta-openembedded/meta-networking
+bitbake-layers add-layer ../meta-openembedded/meta-multimedia
+bitbake-layers add-layer ../meta-openembedded/meta-webserver
+   #+END_SRC
+
+7. *Update local configuration*.
+
+   Only for the first time we need to change our /local/ configuration.
+
+   Edit ~conf/local.conf~ and do the following changes:
+
+   - Change ~MACHINE ??= "qemux86-64"~ near line 39 to ~MACHINE ??= "raspberrypi0-wifi"~ or ~MACHINE ??= "raspberrypi0-2w-64"~.
+   - Change ~DISTRO ?= "poky"~ near line 95 to ~DISTRO ?= "marfb"~.
+   - Change ~CONF_VERSION~ near line 289. You will need to test and find out your own ~CONF_VERSION~ that makes bitbake happy, usually it should be ~CONF_VERSION = "1"~ or ~CONF_VERSION = "2"~.
+   - Add the following lines.
+     - ~LICENSE_FLAGS_ACCEPTED = "synaptics-killswitch"~ --which means we accept the firmware's license. Please read [[https://meta-raspberrypi.readthedocs.io/en/latest/ipcompliance.html#linux-firmware-rpidistro]] and *decide* first, at your own risk.
+     - ~BB_NUMBER_THREADS = "8"~ Bitbake should be smart enough to find out this first, so you don't always need to add this.
+     - ~PARALLEL_MAKE = "-j 8"~ Similar to ~BB_NUMBER_THREADS~.
+
+8. *Build*!
+
+   Run the following command to build.
+   #+BEGIN_SRC shell
+bitbake mar-image-minimal
+   #+END_SRC
+
+   ~mar-image-minimal~ is the image for MAR GNU/Linux to be built.
+
+   Note: *CAVEAT!* It will take several hours to build for the first time. Take a nap, have lunch, go for a walk or +do your coursework+.
+
+   Note: There may be errors when you build for the first time. We have tested ~raspberrypi0-wifi~ worked well. Try re-run the command several times and the problems should be solved.
+
+   Note: If unfortunately your disk is full, then you need to re-partition your disk. Allocate more space in your virtual machine manager, then use ~parted~, ~fdisk~, ~resize2fs~, etc. to re-partition. If unfortunately your ~swap~ partition is after ~rootfs~, then you need to ~swapoff~, delete swap, resize, create new swap, ~swapon~ and update ~/etc/fstab~. If unfortunately you used NVME and VMware the re-partitioning will be more complex and unpredictable.
+
+9. *Burn*.
+
+   A ~.wic.bz2~ (bzipped OpenEmbedded image, not to be confused with Windows image creator) image is created under ~build/tmp-glibc/deploy/images/<machine>/mar-image-minimal-<machine>.rootfs.wic.bz2~. Burn this image using Etcher to your SD card. You may want to ~scp~ it to host first.
+
+   Depending on the layers, ~tmp-glibc~ can also be ~tmp~.
+
+   There are many other images, filesystem folders and other stuff under ~image/<machine>~ folder. Some of them are symbolic links.
+
+10. *Done*!
+
+** MAR Fast Boot Layer (meta-marfb) Recipes
+
+*** recipes-bsp
+
+Board support package.
+
+To append kernel command line and configuration file.
+
+*** recipes-connectivity
+
+Network connectivity.
+
+For hostapd (host access point daemon).
+
+*** recipes-core
+
+Core recipe.
+
+For fastinit, building images, serial USB support.
+
+*** recipes-httpd
+
+HTTP support.
+
+For nginx (used as web server).
+
+*** recipes-kernel
+
+Linux kernel configuration.
+
+To modify Linux kernel configuration.
+
+*** recipes-multimedia
+
+Multimedia support.
+
+For libcamera (one of the camera drivers).
+
+Note: ~libcamera~ earlier than 0.3.0 is erroneous, crash confirmed using gdb backtrace and core dump. Version 0.3.0 was cloned from upstream.
+
+Note: The default version of ~libcamera~ is earlier than 0.3.0 in ~scarthgap~. This is a bug involving OpenEmbedded, Yocto and Raspberry Pi.
+
+Note: This problem won't be fixed by upstream in ~scarthgap~. Do not wait for updates from upstream.
+
+*** recipes-support
+
+Network support.
+
+For dnsmasq (DNS and DHCP).
+
+*** recipes-vision
+
+The vision system. See MAR Vision section.
+
+** Fastinit
+
+This is an init script to replace SysVinit which is to replace systemd and to make the booting very fast.
+
+Please refer to the fastinit manual (man pages).
+
+#+BEGIN_SRC shell
+cd poky/meta-marfb/recipes-core/fastinit
+man ./fastinit.8
+man ./chlevel.1
+man ./level3d.8
+man ./print_motd.1
+# and any other manuals
+#+END_SRC
+
+* MAR Vision

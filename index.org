@@ -1,0 +1,63 @@
+#+TITLE: MAR: The Minimal Autonomous Rover Project
+#+SETUPFILE: ./.setup
+#+OPTIONS: toc:nil
+
+#+BEGIN_CENTER
+Welcome to the main website of MAR -- The Minimal Autonomous Rover Project!
+#+END_CENTER
+
+* The Minimal Autonomous Rover Project
+
+This project is to develop a computer vision board that detects the gates formed
+by pairs of ArUco markers, and output the coordinate of the gate to the rover's
+microcontroller. The system is designed to use minimal resources (e.g. run on a
+Raspberry Pi Zero board) and work very reliable under many circumstances (e.g.
+strong sunlight, high contrast, rain).
+
+Simply order a [[https://www.raspberrypi.com/products/raspberry-pi-zero/][Raspberry Pi Zero]], a [[https://www.raspberrypi.com/products/raspberry-pi-pico/][Raspberry Pi Pico]] microcontroller, an OV5647
+camera that can connect to the Pi Zero, an SD card. Download our image and flash
+to the SD card using your favourite tool e.g. [[https://etcher.balena.io/][Etcher]] and connect the parts to
+your rover's motor controller. Print some ArUco markers and make your own
+autonomous rover!
+
+This project is built and distributed in the hope that it will be useful for
+lecturers and students in electronics, but without any warranty; without even
+the implied warranty of merchantability or fitness for a particular purpose, to
+the extent permitted by applicable law.
+
+* Project Information
+
+** News
+
+- [2024-11-14 Thu] We tested our first prototype rover.
+
+** Vision System
+#+BEGIN_CENTER
+[[https://git.soton.ac.uk/qs2g22/mar24-aruco-cc.git][*Main Repository on git.soton.ac.uk*]] | [[https://github.com/min-auto-rover/mar24-aruco-cc.git][Mirror on GitHub]]
+#+END_CENTER
+
+
+** The MAR GNU/Linux Operating System
+
+#+BEGIN_CENTER
+[[https://git.soton.ac.uk/qs2g22/meta-marfb.git][*Main Repository on git.soton.ac.uk*]] | [[https://github.com/min-auto-rover/meta-marfb.git][Mirror on GitHub]]
+#+END_CENTER
+
+The vision system runs on The Minimal Autonomous Rover (MAR) GNU/Linux Operating
+System.
+
+* Downloads
+
+#+BEGIN_CENTER
+[[https://www.southampton.ac.uk/~qs2g22/mar/marfb-release/release-notes.html][Release Notes]] | [[https://www.southampton.ac.uk/~qs2g22/mar/marfb-release/latest/images/][*Download Latest Images*]] | [[https://www.southampton.ac.uk/~qs2g22/mar/marfb-release/latest/sdk/][Download Latest SDK]] | [[https://www.southampton.ac.uk/~qs2g22/mar/marfb-release/][More Downloads]]
+#+END_CENTER
+
+* Documentation
+
+#+BEGIN_CENTER
+[[./doc][*User Guide*]] | [[./man][Development Manual]]
+#+END_CENTER
+
+If you want to know how to configure and use the software and hardware, please
+refer to the [[./doc][User Guide]]. If you want to modify and build the software or if you
+want to contribute, please refer to the [[./man][Development Manual]].
