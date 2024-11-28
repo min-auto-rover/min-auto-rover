@@ -3,13 +3,13 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2024-11-16 Sat 01:25 -->
+<!-- 2024-11-28 Thu 20:40 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>MAR Development Manual</title>
 <meta name="author" content="Qiyang Sun and Klaus-Peter Zauner" />
 <meta name="generator" content="Org Mode" />
-<style type="text/css">
+<style>
   #content { max-width: 60em; margin: auto; }
   .title  { text-align: center;
              margin-bottom: .2em; }
@@ -202,14 +202,18 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#org5d0bae0">MAR GNU/Linux</a>
+<li><a href="#org3c5fd90">MAR GNU/Linux</a>
 <ul>
-<li><a href="#orge1a9764">Build MAR GNU/Linux</a></li>
-<li><a href="#org43a44c1">MAR Fast Boot Layer (meta-marfb) Recipes</a></li>
-<li><a href="#org5f31dba">Fastinit</a></li>
+<li><a href="#org2f8e392">Build MAR GNU/Linux</a></li>
+<li><a href="#orgb2d9b39">MAR Fast Boot Layer (meta-marfb) Recipes</a></li>
+<li><a href="#org2952e6b">Fastinit</a></li>
 </ul>
 </li>
-<li><a href="#org0affcdc">MAR Vision</a></li>
+<li><a href="#org16b7794">MAR Vision</a>
+<ul>
+<li><a href="#orgfd748b0">C++ Programming Documentation</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -222,13 +226,14 @@
 <i>This page is not intended for non-developers. See also User Guide.</i>
 </p>
 </div>
-<div id="outline-container-org5d0bae0" class="outline-2">
-<h2 id="org5d0bae0">MAR GNU/Linux</h2>
-<div class="outline-text-2" id="text-org5d0bae0">
+
+<div id="outline-container-org3c5fd90" class="outline-2">
+<h2 id="org3c5fd90">MAR GNU/Linux</h2>
+<div class="outline-text-2" id="text-org3c5fd90">
 </div>
-<div id="outline-container-orge1a9764" class="outline-3">
-<h3 id="orge1a9764">Build MAR GNU/Linux</h3>
-<div class="outline-text-3" id="text-orge1a9764">
+<div id="outline-container-org2f8e392" class="outline-3">
+<h3 id="org2f8e392">Build MAR GNU/Linux</h3>
+<div class="outline-text-3" id="text-org2f8e392">
 <p>
 MAR GNU/Linux is built with the <a href="https://www.yoctoproject.org/">Yocto Project</a>. There is no <i>quick start</i> guide for building MAR GNU/Linux from scratch, since building a Linux from source code is not a <i>very</i> easy thing as you build software using CMake and Autotools.
 </p>
@@ -259,13 +264,12 @@ You should use a virtual machine to separate the toolchain from your production 
 <p>
 Please allocate at least 200 GiB for the virtual machine to avoid re-partitioning your virtual hard disk. If you want to build SDK/eSDK, please allocate more. If you are using VMware, please use SATA for virtual disk to avoid virtual hard disk driver problems when re-partitioning. Please manually partition the disk; it is a good idea to put swap partition before your root partition so that it is easier to re-partition. Below is a reasonable partitioning plan.
 </p>
-<div class="org-src-container">
-<pre class="src src-nil">Device         Start       End   Sectors   Size Type
+<pre class="example">
+Device         Start       End   Sectors   Size Type
 /dev/sda1       2048   1050623   1048576   512M EFI System
 /dev/sda2  [omitted] [omitted] [omitted]     8G Linux swap
 /dev/sda3  [omitted] [omitted] [omitted]   256G Linux filesystem
 </pre>
-</div>
 
 <p>
 Install Debian (without GUI) and add yourself to <code>sudoers</code>.
@@ -276,8 +280,8 @@ You should use <code>apt</code> for your software package manager. Update and up
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell"><span style="color: #ECBE7B;">sudo</span> apt update
-<span style="color: #ECBE7B;">sudo</span> apt upgrade
+<pre class="src src-shell">sudo apt update
+sudo apt upgrade
 </pre>
 </div>
 
@@ -285,34 +289,35 @@ You should use <code>apt</code> for your software package manager. Update and up
 Install or update your editor as well. <code>Vim</code> works well, while <code>emacs</code> will need additional configuration for bitbake support.
 </p></li>
 
-<li><b>Install Yocto</b>.
-
-<ol class="org-ol">
 <li><p>
-Install essential tools.
+<b>Install Yocto</b>.
+</p>
+
+<p>
+a) Install essential tools.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell"><span style="color: #ECBE7B;">sudo</span> apt install gawk wget <span style="color: #ECBE7B;">git</span> diffstat unzip texinfo gcc build-essential chrpath socat cpio python3 python3-pip python3-pexpect xz-utils debianutils iputils-ping python3-git python3-jinja2 python3-subunit zstd liblz4-tool file locales libacl1
+<pre class="src src-shell">sudo apt install gawk wget git diffstat unzip texinfo gcc build-essential chrpath socat cpio python3 python3-pip python3-pexpect xz-utils debianutils iputils-ping python3-git python3-jinja2 python3-subunit zstd liblz4-tool file locales libacl1
 </pre>
-</div></li>
+</div>
 
-<li><p>
-Change locale. Don&rsquo;t skip this step. Don&rsquo;t use <code>en_GB</code> even if you are in the UK and use the British keyboard layout.
+<p>
+b) Change locale. Don't skip this step. Don't use <code>en_GB</code> even if you are in the UK and use the British keyboard layout.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell"><span style="color: #ECBE7B;">sudo</span> locale-gen en_US.UTF-8
+<pre class="src src-shell">sudo locale-gen en_US.UTF-8
 </pre>
-</div></li>
+</div>
 
-<li><p>
-Clone <code>poky</code> &#x2013; the reference distribution.
+<p>
+c) Clone <code>poky</code> &#x2013; the reference distribution.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell"><span style="color: #ECBE7B;">git</span> clone git://git.yoctoproject.org/poky
-<span style="color: #ECBE7B;">cd</span> poky
+<pre class="src src-shell">git clone git://git.yoctoproject.org/poky
+cd poky
 </pre>
 </div>
 
@@ -321,11 +326,10 @@ We are using <code>scarthgap</code> branch.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell"><span style="color: #ECBE7B;">git</span> checkout -t origin/scarthgap -b my-scarthgap
-<span style="color: #ECBE7B;">git</span> pull
+<pre class="src src-shell">git checkout -t origin/scarthgap -b my-scarthgap
+git pull
 </pre>
 </div></li>
-</ol></li>
 
 <li><p>
 <b>Clone meta-marfb and its dependencies</b>.
@@ -350,23 +354,22 @@ Clone <a href="https://git.soton.ac.uk/qs2g22/meta-marfb.git">https://git.soton.
 <p>
 The <code>poky</code> directory should contain (some files omitted):
 </p>
-<div class="org-src-container">
-<pre class="src src-nil">   poky/
-      ├── bitbake
-      ├── build
-      ├── meta
-      ├── meta-marfb
-      ├── meta-openembedded
-      ├── meta-poky
-      ├── meta-raspberrypi
-      ├── meta-selftest
-      ├── meta-skeleton
-      ├── meta-yocto-bsp
-      └── oe-init-build-env
+<pre class="example">
+poky/
+   ├── bitbake
+   ├── build
+   ├── meta
+   ├── meta-marfb
+   ├── meta-openembedded
+   ├── meta-poky
+   ├── meta-raspberrypi
+   ├── meta-selftest
+   ├── meta-skeleton
+   ├── meta-yocto-bsp
+   └── oe-init-build-env
 
-       and other files.
-</pre>
-</div></li>
+    and other files.
+</pre></li>
 
 <li><p>
 <b>Source the build environment</b>.
@@ -426,8 +429,8 @@ Edit <code>conf/local.conf</code> and do the following changes:
 <li>Change <code>CONF_VERSION</code> near line 289. You will need to test and find out your own <code>CONF_VERSION</code> that makes bitbake happy, usually it should be <code>CONF_VERSION = "1"</code> or <code>CONF_VERSION = "2"</code>.</li>
 <li>Add the following lines.
 <ul class="org-ul">
-<li><code>LICENSE_FLAGS_ACCEPTED = "synaptics-killswitch"</code> &#x2013;which means we accept the firmware&rsquo;s license. Please read <a href="https://meta-raspberrypi.readthedocs.io/en/latest/ipcompliance.html#linux-firmware-rpidistro">https://meta-raspberrypi.readthedocs.io/en/latest/ipcompliance.html#linux-firmware-rpidistro</a> and <b>decide</b> first, at your own risk.</li>
-<li><code>BB_NUMBER_THREADS = "8"</code> Bitbake should be smart enough to find out this first, so you don&rsquo;t always need to add this.</li>
+<li><code>LICENSE_FLAGS_ACCEPTED = "synaptics-killswitch"</code> &#x2013;which means we accept the firmware's license. Please read <a href="https://meta-raspberrypi.readthedocs.io/en/latest/ipcompliance.html#linux-firmware-rpidistro">https://meta-raspberrypi.readthedocs.io/en/latest/ipcompliance.html#linux-firmware-rpidistro</a> and <b>decide</b> first, at your own risk.</li>
+<li><code>BB_NUMBER_THREADS = "8"</code> Bitbake should be smart enough to find out this first, so you don't always need to add this.</li>
 <li><code>PARALLEL_MAKE = "-j 8"</code> Similar to <code>BB_NUMBER_THREADS</code>.</li>
 </ul></li>
 </ul></li>
@@ -480,13 +483,14 @@ There are many other images, filesystem folders and other stuff under <code>imag
 </ol>
 </div>
 </div>
-<div id="outline-container-org43a44c1" class="outline-3">
-<h3 id="org43a44c1">MAR Fast Boot Layer (meta-marfb) Recipes</h3>
-<div class="outline-text-3" id="text-org43a44c1">
+
+<div id="outline-container-orgb2d9b39" class="outline-3">
+<h3 id="orgb2d9b39">MAR Fast Boot Layer (meta-marfb) Recipes</h3>
+<div class="outline-text-3" id="text-orgb2d9b39">
 </div>
-<div id="outline-container-org8d37741" class="outline-4">
-<h4 id="org8d37741">recipes-bsp</h4>
-<div class="outline-text-4" id="text-org8d37741">
+<div id="outline-container-orga534d01" class="outline-4">
+<h4 id="orga534d01">recipes-bsp</h4>
+<div class="outline-text-4" id="text-orga534d01">
 <p>
 Board support package.
 </p>
@@ -496,9 +500,10 @@ To append kernel command line and configuration file.
 </p>
 </div>
 </div>
-<div id="outline-container-orga41884f" class="outline-4">
-<h4 id="orga41884f">recipes-connectivity</h4>
-<div class="outline-text-4" id="text-orga41884f">
+
+<div id="outline-container-org39ff6a0" class="outline-4">
+<h4 id="org39ff6a0">recipes-connectivity</h4>
+<div class="outline-text-4" id="text-org39ff6a0">
 <p>
 Network connectivity.
 </p>
@@ -508,9 +513,10 @@ For hostapd (host access point daemon).
 </p>
 </div>
 </div>
-<div id="outline-container-orgef09ca2" class="outline-4">
-<h4 id="orgef09ca2">recipes-core</h4>
-<div class="outline-text-4" id="text-orgef09ca2">
+
+<div id="outline-container-org083fa62" class="outline-4">
+<h4 id="org083fa62">recipes-core</h4>
+<div class="outline-text-4" id="text-org083fa62">
 <p>
 Core recipe.
 </p>
@@ -520,9 +526,10 @@ For fastinit, building images, serial USB support.
 </p>
 </div>
 </div>
-<div id="outline-container-org1a367fa" class="outline-4">
-<h4 id="org1a367fa">recipes-httpd</h4>
-<div class="outline-text-4" id="text-org1a367fa">
+
+<div id="outline-container-org91c960c" class="outline-4">
+<h4 id="org91c960c">recipes-httpd</h4>
+<div class="outline-text-4" id="text-org91c960c">
 <p>
 HTTP support.
 </p>
@@ -532,9 +539,10 @@ For nginx (used as web server).
 </p>
 </div>
 </div>
-<div id="outline-container-org8ab14f2" class="outline-4">
-<h4 id="org8ab14f2">recipes-kernel</h4>
-<div class="outline-text-4" id="text-org8ab14f2">
+
+<div id="outline-container-org1564b29" class="outline-4">
+<h4 id="org1564b29">recipes-kernel</h4>
+<div class="outline-text-4" id="text-org1564b29">
 <p>
 Linux kernel configuration.
 </p>
@@ -544,9 +552,10 @@ To modify Linux kernel configuration.
 </p>
 </div>
 </div>
-<div id="outline-container-org9a228fb" class="outline-4">
-<h4 id="org9a228fb">recipes-multimedia</h4>
-<div class="outline-text-4" id="text-org9a228fb">
+
+<div id="outline-container-orgfbab283" class="outline-4">
+<h4 id="orgfbab283">recipes-multimedia</h4>
+<div class="outline-text-4" id="text-orgfbab283">
 <p>
 Multimedia support.
 </p>
@@ -564,13 +573,14 @@ Note: The default version of <code>libcamera</code> is earlier than 0.3.0 in <co
 </p>
 
 <p>
-Note: This problem won&rsquo;t be fixed by upstream in <code>scarthgap</code>. Do not wait for updates from upstream.
+Note: This problem won't be fixed by upstream in <code>scarthgap</code>. Do not wait for updates from upstream.
 </p>
 </div>
 </div>
-<div id="outline-container-orgdb056fc" class="outline-4">
-<h4 id="orgdb056fc">recipes-support</h4>
-<div class="outline-text-4" id="text-orgdb056fc">
+
+<div id="outline-container-org1b8e3c0" class="outline-4">
+<h4 id="org1b8e3c0">recipes-support</h4>
+<div class="outline-text-4" id="text-org1b8e3c0">
 <p>
 Network support.
 </p>
@@ -580,18 +590,20 @@ For dnsmasq (DNS and DHCP).
 </p>
 </div>
 </div>
-<div id="outline-container-orgfe41e56" class="outline-4">
-<h4 id="orgfe41e56">recipes-vision</h4>
-<div class="outline-text-4" id="text-orgfe41e56">
+
+<div id="outline-container-orgbc568f9" class="outline-4">
+<h4 id="orgbc568f9">recipes-vision</h4>
+<div class="outline-text-4" id="text-orgbc568f9">
 <p>
 The vision system. See MAR Vision section.
 </p>
 </div>
 </div>
 </div>
-<div id="outline-container-org5f31dba" class="outline-3">
-<h3 id="org5f31dba">Fastinit</h3>
-<div class="outline-text-3" id="text-org5f31dba">
+
+<div id="outline-container-org2952e6b" class="outline-3">
+<h3 id="org2952e6b">Fastinit</h3>
+<div class="outline-text-3" id="text-org2952e6b">
 <p>
 This is an init script to replace SysVinit which is to replace systemd and to make the booting very fast.
 </p>
@@ -601,23 +613,35 @@ Please refer to the fastinit manual (man pages).
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell"><span style="color: #ECBE7B;">cd</span> poky/meta-marfb/recipes-core/fastinit
+<pre class="src src-shell">cd poky/meta-marfb/recipes-core/fastinit
 man ./fastinit.8
 man ./chlevel.1
 man ./level3d.8
 man ./print_motd.1
-<span style="color: #5B6268;"># </span><span style="color: #5B6268;">and any other manuals</span>
+# and any other manuals
 </pre>
 </div>
 </div>
 </div>
 </div>
-<div id="outline-container-org0affcdc" class="outline-2">
-<h2 id="org0affcdc">MAR Vision</h2>
+
+<div id="outline-container-org16b7794" class="outline-2">
+<h2 id="org16b7794">MAR Vision</h2>
+<div class="outline-text-2" id="text-org16b7794">
+</div>
+<div id="outline-container-orgfd748b0" class="outline-3">
+<h3 id="orgfd748b0">C++ Programming Documentation</h3>
+<div class="outline-text-3" id="text-orgfd748b0">
+<p>
+The documentation for the C++ code for MAR Vision, generated
+automatically using Doxygen, is available <a href="./aruco-cc-doc/index.html">here</a>.
+</p>
+</div>
+</div>
 </div>
 </div>
 <div id="postamble" class="status">
-<br /><hr /><p><strong>Copyleft &#127279; 2024 Qiyang Sun and the MAR24 Project Maintainers</strong>. Unless otherwise noted or where University of Southampton copyright or intellectual properties regulations apply, this work (excluding code and program) is licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">CC BY-SA 4.0<img style="height:18px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1" alt=""><img style="height:18px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1" alt=""><img style="height:18px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1" alt=""></a> | Linux Foundation&reg; and Yocto Project&reg; are registered trademarks of the Linux Foundation. Linux&reg; is a registered trademark of Linus Torvalds. This project is not affiliated with Debian. Debian is a registered trademark owned by Software in the Public Interest, Inc. Raspberry Pi is a trademark of Raspberry Pi Ltd. | <a href="https://www.southampton.ac.uk/~qs2g22/privacy-statement">Privacy Statement</a> | <a href="https://www.southampton.ac.uk/hr/services/data-protection/data-protection.page#your-data-protection">University Data Protection</a></p><br /><p><strong>Author</strong>: Qiyang Sun and Klaus-Peter Zauner <<a href="mailto:{qs2g22 at">{qs2g22 at</a>, <a href="mailto:kpz at ecs dot} soton dot ac dot uk">kpz at ecs dot} soton dot ac dot uk</a>> | <strong>Last modified</strong>: 2024-11-16 Sat 01:25 | <strong>Built with</strong> <a href="https://www.gnu.org/software/emacs/">Emacs</a> 29.4 (<a href="https://orgmode.org">Org</a> mode 9.7.11) </p>
+<br /><hr /><p><strong>Copyleft &#127279; 2024 Qiyang Sun and the MAR24 Project Maintainers</strong>. Unless otherwise noted or where University of Southampton copyright or intellectual properties regulations apply, this work (excluding code and program) is licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">CC BY-SA 4.0<img style="height:18px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1" alt=""><img style="height:18px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1" alt=""><img style="height:18px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1" alt=""></a> | Linux Foundation&reg; and Yocto Project&reg; are registered trademarks of the Linux Foundation. Linux&reg; is a registered trademark of Linus Torvalds. This project is not affiliated with Debian. Debian is a registered trademark owned by Software in the Public Interest, Inc. Raspberry Pi is a trademark of Raspberry Pi Ltd. | <a href="https://www.southampton.ac.uk/~qs2g22/privacy-statement">Privacy Statement</a> | <a href="https://www.southampton.ac.uk/hr/services/data-protection/data-protection.page#your-data-protection">University Data Protection</a></p><br /><p><strong>Author</strong>: Qiyang Sun and Klaus-Peter Zauner <<a href="mailto:{qs2g22 at">{qs2g22 at</a>, <a href="mailto:kpz at ecs dot} soton dot ac dot uk">kpz at ecs dot} soton dot ac dot uk</a>> | <strong>Last modified</strong>: 2024-11-28 Thu 20:40 | <strong>Built with</strong> <a href="https://www.gnu.org/software/emacs/">Emacs</a> 28.2 (<a href="https://orgmode.org">Org</a> mode 9.5.5) </p>
 </div>
 </body>
 </html>

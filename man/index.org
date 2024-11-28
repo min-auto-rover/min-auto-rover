@@ -236,3 +236,8 @@ man ./print_motd.1
 #+END_SRC
 
 * MAR Vision
+
+** C++ Programming Documentation
+
+The documentation for the C++ code for MAR Vision, generated
+automatically using Doxygen, is available [[./aruco-cc-doc/index.html][here]].
